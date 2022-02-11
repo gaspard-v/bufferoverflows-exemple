@@ -143,7 +143,9 @@ int main(int argc, char *argv[])
             {
                 // Check if it was for closing , and also read the
                 // incoming message
-                if ((valread = read(sd, buffer, BUFFER_SIZE)) == 0)
+                // OH no ... the developper forgot to change OLD_BUFFER_SIZE D:
+                // there's a buffer overflows stack based we can exploit ...
+                if ((valread = read(sd, buffer, OLD_BUFFER_SIZE)) == 0)
                 {
                     // Somebody disconnected , get his details and print
                     getpeername(sd, (struct sockaddr *)&(server_fd->addr),
