@@ -143,9 +143,7 @@ int main(int argc, char *argv[])
             {
                 // Check if it was for closing , and also read the
                 // incoming message
-                // OH no ... the developper forgot to change OLD_BUFFER_SIZE D:
-                // there's a buffer overflows stack based we can exploit ...
-                if ((valread = read(sd, buffer, OLD_BUFFER_SIZE)) == 0)
+                if ((valread = read(sd, buffer, BUFFER_SIZE)) == 0)
                 {
                     // Somebody disconnected , get his details and print
                     getpeername(sd, (struct sockaddr *)&(server_fd->addr),
@@ -154,6 +152,11 @@ int main(int argc, char *argv[])
                            inet_ntoa(server_fd->addr.sin_addr), ntohs(server_fd->addr.sin_port));
                     close(sd);
                     client_socket[i] = 0;
+                }
+                else if(valread == -1)
+                {
+                    perror("Read failed");
+                    exit(1);
                 }
                 else
                 {
