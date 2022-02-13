@@ -14,10 +14,13 @@ debug: executable
 release: CFLAGS += -s
 release: executable
 
-executable: linux-socket-bfosb
+executable: linux-socket-bfosb-x86 linux-socket-bfosb-x64
 
-linux-socket-bfosb:
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o build/$@ src/linux-socket-bfosb.c $(LDLIBS)
+linux-socket-bfosb-x86:
+	$(CC) $(CFLAGS) -m32 $(CPPFLAGS) $(LDFLAGS) -o build/$@ src/linux-socket-bfosb.c $(LDLIBS)
+
+linux-socket-bfosb-x64:
+	$(CC) $(CFLAGS) -m64 $(CPPFLAGS) $(LDFLAGS) -o build/$@ src/linux-socket-bfosb.c $(LDLIBS)
 
 clean:
 	rm -rf *.o
