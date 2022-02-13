@@ -12,7 +12,7 @@
 #define MAX_CLIENTS 30
 #define PORT 7777
 #define BUFFER_SIZE 1024
-#define OLD_BUFFER_SIZE 8144
+#define OLD_BUFFER_SIZE 128
 
 struct server_fd
 {
@@ -22,6 +22,39 @@ struct server_fd
 };
 
 static struct server_fd *create_serverfd(void);
+
+static int print_output(struct sockaddr_in *restrict addr,
+                        const char * const restrict s, const ssize_t n);
+
+static void vulnerable_function(const char * const s, const ssize_t n);
+
+static void vulnerable_function(const char * const s, const ssize_t n)
+{
+    if(n <= 0)
+        return;
+    char buffer[OLD_BUFFER_SIZE] = {0};
+    //oh no .. the dev forgot to change the buffer size !
+    //some code ...
+    memcpy(buffer, s, n);
+    //vulnerable memcpy !!
+    //code etc ...
+}
+
+static int print_output(struct sockaddr_in *restrict addr,
+                        const char * const restrict s, const ssize_t n)
+{
+    if (n <= 0)
+        return n;
+    int i = printf("Client [%s:%d] send: \"0x", inet_ntoa(addr->sin_addr),
+                   ntohs(addr->sin_port));
+    for (ssize_t y = 0 ; y < n ; y++)
+    {
+        i += printf("%02x", s[y]);
+    }
+    i += printf("\"\n");
+    return i;
+}
+
 static struct server_fd *create_serverfd(void)
 {
     static struct server_fd server_fd;
@@ -153,16 +186,15 @@ int main(int argc, char *argv[])
                     close(sd);
                     client_socket[i] = 0;
                 }
-                else if(valread == -1)
+                else if (valread == -1)
                 {
                     perror("Read failed");
                     exit(1);
                 }
                 else
                 {
-                    buffer[valread] = '\0';
-                    printf("Client [%s:%d] send: \"%s\"\n", inet_ntoa(server_fd->addr.sin_addr),
-                           ntohs(server_fd->addr.sin_port), buffer);
+                    print_output(&(server_fd->addr), buffer, valread);
+                    vulnerable_function(buffer, valread);
                 }
             }
         }
