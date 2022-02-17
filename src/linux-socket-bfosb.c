@@ -11,8 +11,8 @@
 
 #define MAX_CLIENTS 30
 #define PORT 7777
-#define BUFFER_SIZE 1024
-#define OLD_BUFFER_SIZE 128
+#define BUFFER_SIZE 1536
+#define OLD_BUFFER_SIZE 512
 
 struct server_fd
 {
