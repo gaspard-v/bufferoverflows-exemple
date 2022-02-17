@@ -1,8 +1,8 @@
 .POSIX:
 CC       = cc
-CFLAGS   = -std=c17 -Werror=vla -Wextra -Wall -static -Wno-unused-parameter
+CFLAGS   = -std=c17 -Werror=vla -Wextra -Wall -O0 -Wno-unused-parameter
 CPPFLAGS =
-LDFLAGS  = -ggdb3
+LDFLAGS  = -static
 LDLIBS   =
 PREFIX   = /usr/local
 
