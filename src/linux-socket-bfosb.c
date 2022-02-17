@@ -14,6 +14,12 @@
 #define BUFFER_SIZE 1536
 #define OLD_BUFFER_SIZE 512
 
+#ifdef DEBUG
+#define PRINT_D(...) printf( __VA_ARGS__)
+#else
+#define PRINT_D(...)
+#endif
+
 struct server_fd
 {
     int sockfd;
@@ -35,6 +41,7 @@ static void vulnerable_function(const char * const s, const ssize_t n)
     char buffer[OLD_BUFFER_SIZE] = {0};
     //oh no .. the dev forgot to change the buffer size !
     //some code ...
+    PRINT_D("[DEBUG] buffer address: %p\n", buffer);
     memcpy(buffer, s, n);
     //vulnerable memcpy !!
     //code etc ...
@@ -45,8 +52,8 @@ static int print_output(struct sockaddr_in *restrict addr,
 {
     if (n <= 0)
         return n;
-    int i = printf("Client [%s:%d] send: \"0x", inet_ntoa(addr->sin_addr),
-                   ntohs(addr->sin_port));
+    int i = printf("Client [%s:%d] size %d send: \"0x", inet_ntoa(addr->sin_addr),
+                   ntohs(addr->sin_port), (int)n);
     for (ssize_t y = 0 ; y < n ; y++)
     {
         i += printf("%02x", s[y]);
