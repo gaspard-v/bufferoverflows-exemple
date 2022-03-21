@@ -7,7 +7,7 @@ def main():
     i = 0
     print("[script] Autorestart script is launched")
     while(True):
-        process = subprocess.run([sys.argv[0]])
+        process = subprocess.run([sys.argv[1]])
         i += 1
         print(f"[script] [{i}] Process has exited, return code: {process.returncode}")
 
