@@ -1,0 +1,7 @@
+0x0804b04a : inc esp ; ret
+0x080af4a6 : push esp ; ret
+0x080af456 : pop esp ; ret
+0x0805ed81 : add eax, ecx ; ret
+0x0806b63f : nop ; xor eax, eax ; ret
+0x080af446 : push eax ; ret
+0x08082de5 : push esp ; call eax
