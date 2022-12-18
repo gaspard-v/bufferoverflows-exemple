@@ -82,7 +82,7 @@ static struct server_fd *create_serverfd(void)
     server_fd.addr.sin_family = AF_INET;
     server_fd.addr.sin_addr.s_addr = INADDR_ANY;
     server_fd.addr.sin_port = htons(PORT);
-    // Forcefully attaching socket to the port 8080
+    // Forcefully attaching socket to the port 7777
     if (bind(server_fd.sockfd, (struct sockaddr *)&(server_fd.addr),
              sizeof(server_fd.addr)) < 0)
     {
