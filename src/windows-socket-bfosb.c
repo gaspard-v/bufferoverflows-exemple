@@ -5,6 +5,8 @@
 #include <io.h>
 #include <errno.h>
 #include <string.h>
+#include <wchar.h>
+#include <locale.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -15,10 +17,16 @@
 #define OLD_BUFFER_SIZE 512
 
 #ifdef DEBUG
-#define PRINT_D(...) printf( __VA_ARGS__)
+#define PRINT_D(...) printf(__VA_ARGS__)
 #else
 #define PRINT_D(...)
 #endif
+
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+#define perror(x) error_message(x)
 
 struct server_fd
 {
@@ -29,31 +37,52 @@ struct server_fd
 
 static struct server_fd *create_serverfd(void);
 
-static int print_output(struct sockaddr_in *restrict addr, const char * const restrict s, const size_t n);
+static int print_output(struct sockaddr_in *restrict addr, const char *const restrict s, const size_t n);
 
-static void vulnerable_function(const char * const s, const size_t n);
+static void error_message(const char *const message);
 
-static void vulnerable_function(const char * const s, const size_t n)
+static void vulnerable_function(const char *const s, const size_t n);
+
+static void vulnerable_function(const char *const s, const size_t n)
 {
-    if(n <= 0)
+    if (n <= 0)
         return;
     char buffer[OLD_BUFFER_SIZE] = {0};
-    //oh no .. the dev forgot to change the buffer size !
-    //some code ...
+    // oh no .. the dev forgot to change the buffer size !
+    // some code ...
     PRINT_D("[DEBUG] buffer address: %p\n", buffer);
     memcpy(buffer, s, n);
-    //vulnerable memcpy !!
-    //code etc ...
+    // vulnerable memcpy !!
+    // code etc ...
+}
+
+static void error_message(const char *const message)
+{
+    DWORD errCode = GetLastError();
+    WCHAR *err;
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                        NULL,
+                        errCode,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // default language
+                        (LPWSTR)&err,
+                        0,
+                        NULL))
+    {
+        wprintf(L"Format message failed with 0x%x\n", GetLastError());
+        return;
+    }
+    wprintf(L"%s: %ls\n", message, err);
+    LocalFree(err);
 }
 
 static int print_output(struct sockaddr_in *restrict addr,
-                        const char * const restrict s, const size_t n)
+                        const char *const restrict s, const size_t n)
 {
     if (n <= 0)
         return n;
     int i = printf("Client [%s:%d] size %d send: \"0x", inet_ntoa(addr->sin_addr),
                    ntohs(addr->sin_port), (int)n);
-    for (size_t y = 0 ; y < n ; y++)
+    for (size_t y = 0; y < n; y++)
     {
         i += printf("%02x", s[y]);
     }
@@ -73,7 +102,7 @@ static struct server_fd *create_serverfd(void)
         exit(EXIT_FAILURE);
     }
     if (setsockopt(server_fd.sockfd, SOL_SOCKET, SO_REUSEADDR,
-                   (char*)&opt, sizeof(opt)))
+                   (char *)&opt, sizeof(opt)))
     {
         perror("setsockopt");
         exit(EXIT_FAILURE);
@@ -108,6 +137,7 @@ int main(int argc, char *argv[])
     size_t valread = 0;
     static int client_socket[MAX_CLIENTS] = {0};
     char hello_message[] = "Hello !\r\n";
+    setlocale(LC_CTYPE, "");
     printf("starting ECHO1.0 deamon\n");
     server_fd = create_serverfd();
     printf("Waiting for connections ...\n");
