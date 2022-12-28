@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 {
     char buffer[BUFFER_SIZE] = {0};
     struct server_fd *server_fd = {0};
+    WSADATA WSAData;
 
     // set of socket descriptors
     fd_set readfds;
@@ -139,6 +140,7 @@ int main(int argc, char *argv[])
     char hello_message[] = "Hello !\r\n";
     setlocale(LC_CTYPE, "");
     printf("starting ECHO1.0 deamon\n");
+    WSAStartup(MAKEWORD(2, 0), &WSAData);
     server_fd = create_serverfd();
     printf("Waiting for connections ...\n");
     while (1)
@@ -212,7 +214,9 @@ int main(int argc, char *argv[])
             {
                 // Check if it was for closing , and also read the
                 // incoming message
-                if ((valread = read(sd, buffer, BUFFER_SIZE)) == 0)
+                if ((valread = recv(sd, buffer, BUFFER_SIZE, 0)) == 0 ||
+                    WSAGetLastError() == WSAETIMEDOUT ||
+                    WSAGetLastError() == WSAECONNRESET)
                 {
                     // Somebody disconnected , get his details and print
                     getpeername(sd, (struct sockaddr *)&(server_fd->addr),
@@ -235,5 +239,7 @@ int main(int argc, char *argv[])
             }
         }
     }
+    closesocket(server_fd->sockfd);
+    WSACleanup();
     return EXIT_SUCCESS;
 }
