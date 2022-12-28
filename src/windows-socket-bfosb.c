@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     fd_set readfds;
 
     int max_sd, sd, activity, new_socket;
-    size_t valread = 0;
+    int valread = 0;
     static int client_socket[MAX_CLIENTS] = {0};
     char hello_message[] = "Hello !\r\n";
     setlocale(LC_CTYPE, "");

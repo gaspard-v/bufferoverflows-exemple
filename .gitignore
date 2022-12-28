@@ -5,3 +5,5 @@ __pycache__
 *.obj
 *.exe
 *.a
+
+!exemple-build/**
