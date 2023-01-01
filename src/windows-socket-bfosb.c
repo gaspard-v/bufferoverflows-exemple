@@ -132,7 +132,7 @@ static struct server_fd *create_serverfd(void)
 void  INThandler(int sig)
 {
     signal(sig, SIG_IGN);
-    printf("Receive SIGINT, server is closing ...");
+    printf("Receive signal 0x%x, server is closing ...", sig);
     keep_running = 0;
 }
 
