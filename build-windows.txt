@@ -1,3 +1,5 @@
+
+GCC
 release x64:
 gcc -Wall -Wextra -Werror=vla -std=c17 -O0 -Wno-unused-parameter -Wunknown-pragmas -static -static-libgcc -m64 -s .\src\windows-socket-bfosb.c -lwsock32 -o .\exemple-build\release\windows-socket-bfosb-x64.exe
 
@@ -9,3 +11,6 @@ gcc -Wall -Wextra -Werror=vla -std=c17 -O0 -Wno-unused-parameter -Wunknown-pragm
 
 debug x86:
 gcc -Wall -Wextra -Werror=vla -std=c17 -O0 -Wno-unused-parameter -Wunknown-pragmas -static -static-libgcc -m32 -g -DDEBUG .\src\windows-socket-bfosb.c -lwsock32 -o .\exemple-build\debug\windows-socket-bfosb-x86.exe
+
+MSCV
+cl.exe .\src\windows-socket-bfosb.c /Fe"exemple-build\release\windows-socket-bfosb.exe" /Wall /MP /Od /std:c17 /MT /MT
