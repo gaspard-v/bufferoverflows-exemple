@@ -1,13 +1,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include <unistd.h>
 #include <io.h>
 #include <errno.h>
 #include <string.h>
 #include <wchar.h>
 #include <locale.h>
 #include <winsock2.h>
+#include <signal.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
@@ -35,6 +35,8 @@ struct server_fd
     int addrlen;
 };
 
+static unsigned char keep_running = 1;
+
 static struct server_fd *create_serverfd(void);
 
 static int print_output(struct sockaddr_in *restrict addr, const char *const restrict s, const size_t n);
@@ -42,6 +44,8 @@ static int print_output(struct sockaddr_in *restrict addr, const char *const res
 static void error_message(const char *const message);
 
 static void vulnerable_function(const char *const s, const size_t n);
+
+void INThandler(int);
 
 static void vulnerable_function(const char *const s, const size_t n)
 {
@@ -71,7 +75,7 @@ static void error_message(const char *const message)
         wprintf(L"Format message failed with 0x%x\n", GetLastError());
         return;
     }
-    wprintf(L"%s: %ls\n", message, err);
+    wprintf(L"%s: %ls, error code: 0x%x\n", message, err, GetLastError());
     LocalFree(err);
 }
 
@@ -125,6 +129,13 @@ static struct server_fd *create_serverfd(void)
     return &server_fd;
 }
 
+void  INThandler(int sig)
+{
+    signal(sig, SIG_IGN);
+    printf("Receive SIGINT, server is closing ...");
+    keep_running = 0;
+}
+
 int main(int argc, char *argv[])
 {
     char buffer[BUFFER_SIZE] = {0};
@@ -139,11 +150,20 @@ int main(int argc, char *argv[])
     static int client_socket[MAX_CLIENTS] = {0};
     char hello_message[] = "Hello !\r\n";
     setlocale(LC_CTYPE, "");
+    signal(SIGINT, INThandler);
+    signal(SIGTERM, INThandler);
+    signal(SIGABRT, INThandler);
+    // select timeout
+    const struct timeval timeout = { .tv_sec = 1L, .tv_usec = 0L};
     printf("starting ECHO1.0 deamon\n");
-    WSAStartup(MAKEWORD(2, 0), &WSAData);
+    if (WSAStartup(MAKEWORD(2, 0), &WSAData))
+    {
+        perror("WSAStartup");
+        exit(EXIT_FAILURE);
+    }
     server_fd = create_serverfd();
     printf("Waiting for connections ...\n");
-    while (1)
+    while (keep_running)
     {
         FD_ZERO(&readfds);
         // add master socket to set
@@ -165,7 +185,7 @@ int main(int argc, char *argv[])
         }
         // wait for an activity on one of the sockets , timeout is NULL ,
         // so wait indefinitely
-        activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+        activity = select(max_sd + 1, &readfds, NULL, NULL, &timeout);
 
         if ((activity < 0) && (errno != EINTR))
         {
@@ -223,7 +243,7 @@ int main(int argc, char *argv[])
                                 &(server_fd->addrlen));
                     printf("Host disconnected , ip %s , port %d \n",
                            inet_ntoa(server_fd->addr.sin_addr), ntohs(server_fd->addr.sin_port));
-                    close(sd);
+                    closesocket(sd);
                     client_socket[i] = 0;
                 }
                 else if (valread == -1)
