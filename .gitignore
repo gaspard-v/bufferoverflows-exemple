@@ -9,3 +9,8 @@ __pycache__
 !exemple-build/**
 x64/
 x86/
+
+# IDA files
+*.id*
+*.nam
+*.til
